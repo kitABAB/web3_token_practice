@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'ERC20 Faucet - Token 水龙头',
+  title: 'KUN Faucet - KUN Token 水龙头',
   description: '一个简单的 ERC20 Token 水龙头 DApp',
 }
 

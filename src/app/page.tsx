@@ -16,11 +16,14 @@ export default function Home() {
               <Droplets className="w-6 h-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-bold text-lg">ERC20 Faucet</h1>
-              <p className="text-xs text-muted-foreground">Token 水龙头</p>
+              <h1 className="font-bold text-lg">KUN Faucet</h1>
+              <p className="text-xs text-muted-foreground">KUN Token 水龙头</p>
             </div>
           </div>
-          <w3m-button />
+          <div className="flex items-center gap-2">
+            <w3m-network-button />
+            <w3m-button />
+          </div>
         </div>
       </header>
 
