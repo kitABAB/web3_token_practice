@@ -43,7 +43,7 @@ export function FaucetClaim() {
         {
           address: contractAddress,
           abi: faucetTokenAbi,
-          functionName: 'claim',
+          functionName: 'requestTokens',
         },
         {
           onSuccess: (hash) => {

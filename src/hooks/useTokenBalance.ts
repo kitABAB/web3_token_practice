@@ -7,12 +7,12 @@ import { getContractConfig, CONTRACT_ADDRESSES, TOKEN_INFO } from '@/config/cont
 export function useTokenBalance() {
   const { address } = useAccount()
   const chainId = useChainId()
-  const { address: contractAddress, abi: faucetTokenAbi } = getContractConfig(chainId, 'faucet')
+  const { address: contractAddress, abi: tokenAbi } = getContractConfig(chainId, 'token')
 
 
   const { data: balance, refetch, isLoading } = useReadContract({
     address: contractAddress,
-    abi: faucetTokenAbi,
+    abi: tokenAbi,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {

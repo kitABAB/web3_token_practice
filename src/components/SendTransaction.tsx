@@ -40,7 +40,7 @@ export function SendTransaction() {
     tokenSymbol: string
   } | null>(null)
 
-  const { address: contractAddress, abi: faucetTokenAbi } = getContractConfig(chainId, 'faucet')
+  const { address: tokenAddress, abi: tokenAbi } = getContractConfig(chainId, 'token')
 
   const { writeContract, isPending: isTokenPending } = useWriteContract()
   const { sendTransaction, isPending: isEthPending } = useSendTransaction()
@@ -65,8 +65,8 @@ export function SendTransaction() {
 
       writeContract(
         {
-          address: contractAddress,
-          abi: faucetTokenAbi,
+          address: tokenAddress,
+          abi: tokenAbi,
           functionName: 'transfer',
           args: [recipient as `0x${string}`, parsedAmount],
         },

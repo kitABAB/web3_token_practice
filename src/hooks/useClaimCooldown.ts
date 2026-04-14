@@ -15,7 +15,7 @@ export function useClaimCooldown() {
   const { data: lastClaimTime, refetch: refetchLastClaimTime } = useReadContract({
     address: contractAddress,
     abi: faucetTokenAbi,
-    functionName: 'lastClaimTime',
+    functionName: 'requestedAdd',
     args: address ? [address] : undefined,
     query: {
       enabled: !!address,
@@ -25,7 +25,7 @@ export function useClaimCooldown() {
   const { data: cooldownFromContract } = useReadContract({
     address: contractAddress,
     abi: faucetTokenAbi,
-    functionName: 'claimCooldown',
+    functionName: 'WAIT_TIME',
     query: {
       enabled: !!address,
     },
