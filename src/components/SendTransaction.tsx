@@ -221,7 +221,7 @@ export function SendTransaction() {
               <SelectTrigger>
                 <SelectValue placeholder="选择发送类型" />
               </SelectTrigger>
-              <SelectContent position="popper" sideOffset={4}>
+              <SelectContent sideOffset={4}>
                 <SelectItem value="token">{symbol} Token</SelectItem>
                 <SelectItem value="eth">
                   {chainId === 11155111 ? 'Sepolia ' : ''}ETH
