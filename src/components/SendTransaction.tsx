@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useAccount, useChainId, useWriteContract, useSendTransaction, useBalance } from 'wagmi'
+import { useState, useEffect, useRef } from 'react'
+import { useAccount, useChainId, useWriteContract, useSendTransaction, useBalance, useWaitForTransactionReceipt } from 'wagmi'
 import { parseEther, parseUnits, isAddress } from 'viem'
 import { Send, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -34,6 +34,7 @@ export function SendTransaction() {
   const [amount, setAmount] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [txHash, setTxHash] = useState('')
+  const [txId, setTxId] = useState('')
   const [txDetails, setTxDetails] = useState<{
     address: string
     amount: string
@@ -45,7 +46,29 @@ export function SendTransaction() {
   const { writeContract, isPending: isTokenPending } = useWriteContract()
   const { sendTransaction, isPending: isEthPending } = useSendTransaction()
 
-  const isPending = isTokenPending || isEthPending
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash as `0x${string}`,
+    query: {
+      enabled: !!txHash,
+    },
+  })
+
+  const hasHandledConfirmation = useRef(false)
+
+  useEffect(() => {
+    if (isConfirmed && txId && !hasHandledConfirmation.current) {
+      hasHandledConfirmation.current = true
+      updateTransaction(txId, { status: 'success' })
+      if (sendType === 'token') {
+        refetchBalance()
+      } else {
+        refetchEthBalance()
+      }
+      setDialogOpen(true)
+    }
+  }, [isConfirmed, txId, sendType, updateTransaction, refetchBalance, refetchEthBalance])
+
+  const isPending = isTokenPending || isEthPending || isConfirming
 
   const isValidInput = () => {
     if (!recipient || !amount) return false
@@ -58,24 +81,27 @@ export function SendTransaction() {
   const handleSend = async () => {
     if (!address || !isValidInput()) return
 
-    const amountNum = parseFloat(amount)
+    hasHandledConfirmation.current = false
+    const currentSendType = sendType
+    const currentRecipient = recipient
+    const currentAmount = amount
 
-    if (sendType === 'token') {
-      const parsedAmount = parseUnits(amount, TOKEN_INFO.decimals)
+    if (currentSendType === 'token') {
+      const parsedAmount = parseUnits(currentAmount, TOKEN_INFO.decimals)
 
       writeContract(
         {
           address: tokenAddress,
           abi: tokenAbi,
           functionName: 'transfer',
-          args: [recipient as `0x${string}`, parsedAmount],
+          args: [currentRecipient as `0x${string}`, parsedAmount],
         },
         {
           onSuccess: (hash) => {
             setTxHash(hash)
             setTxDetails({
-              address: recipient,
-              amount: amount,
+              address: currentRecipient,
+              amount: currentAmount,
               tokenSymbol: symbol,
             })
 
@@ -83,19 +109,14 @@ export function SendTransaction() {
               type: 'send_token',
               hash,
               from: address,
-              to: recipient,
-              amount: amount,
+              to: currentRecipient,
+              amount: currentAmount,
               tokenSymbol: symbol,
               timestamp: Date.now(),
               status: 'pending',
               chainId,
             })
-
-            setTimeout(() => {
-              updateTransaction(id, { status: 'success' })
-              refetchBalance()
-              setDialogOpen(true)
-            }, 5000)
+            setTxId(id)
 
             setRecipient('')
             setAmount('')
@@ -106,19 +127,19 @@ export function SendTransaction() {
         }
       )
     } else {
-      const parsedAmount = parseEther(amount)
+      const parsedAmount = parseEther(currentAmount)
 
       sendTransaction(
         {
-          to: recipient as `0x${string}`,
+          to: currentRecipient as `0x${string}`,
           value: parsedAmount,
         },
         {
           onSuccess: (hash) => {
             setTxHash(hash)
             setTxDetails({
-              address: recipient,
-              amount: amount,
+              address: currentRecipient,
+              amount: currentAmount,
               tokenSymbol: 'ETH',
             })
 
@@ -126,19 +147,14 @@ export function SendTransaction() {
               type: 'send_eth',
               hash,
               from: address,
-              to: recipient,
-              amount: amount,
+              to: currentRecipient,
+              amount: currentAmount,
               tokenSymbol: 'ETH',
               timestamp: Date.now(),
               status: 'pending',
               chainId,
             })
-
-            setTimeout(() => {
-              updateTransaction(id, { status: 'success' })
-              refetchEthBalance()
-              setDialogOpen(true)
-            }, 5000)
+            setTxId(id)
 
             setRecipient('')
             setAmount('')
@@ -205,7 +221,7 @@ export function SendTransaction() {
               <SelectTrigger>
                 <SelectValue placeholder="选择发送类型" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" sideOffset={4}>
                 <SelectItem value="token">{symbol} Token</SelectItem>
                 <SelectItem value="eth">
                   {chainId === 11155111 ? 'Sepolia ' : ''}ETH

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAccount, useChainId, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { Droplets, Loader2, Clock } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -28,15 +28,29 @@ export function FaucetClaim() {
 
   const { writeContract, isPending: isWritePending } = useWriteContract()
 
-  const { isLoading: isConfirming } = useWaitForTransactionReceipt({
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash: txHash as `0x${string}`,
     query: {
       enabled: !!txHash,
     },
   })
 
+  const hasHandledConfirmation = useRef(false)
+
+  useEffect(() => {
+    if (isConfirmed && txId && !hasHandledConfirmation.current) {
+      hasHandledConfirmation.current = true
+      updateTransaction(txId, { status: 'success' })
+      refetchBalance()
+      refetchCooldown()
+      setDialogOpen(true)
+    }
+  }, [isConfirmed, txId, updateTransaction, refetchBalance, refetchCooldown])
+
   const handleClaim = async () => {
     if (!address || !canClaim) return
+
+    hasHandledConfirmation.current = false
 
     try {
       writeContract(
@@ -60,21 +74,6 @@ export function FaucetClaim() {
               chainId,
             })
             setTxId(id)
-
-            // Wait for confirmation and update
-            const checkConfirmation = async () => {
-              try {
-                updateTransaction(id, { status: 'success' })
-                refetchBalance()
-                refetchCooldown()
-                setDialogOpen(true)
-              } catch {
-                updateTransaction(id, { status: 'failed' })
-              }
-            }
-
-            // Simple polling for confirmation
-            setTimeout(checkConfirmation, 5000)
           },
           onError: (error) => {
             console.error('Claim failed:', error)
