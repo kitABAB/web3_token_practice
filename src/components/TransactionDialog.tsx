@@ -9,7 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface TransactionDialogProps {
   open: boolean
@@ -103,15 +104,14 @@ export function TransactionDialog({
                   <Copy className="w-4 h-4" />
                 )}
               </Button>
-              <Button variant="ghost" size="sm" asChild className="shrink-0">
-                <a
-                  href={getExplorerUrl(hash)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-              </Button>
+              <a
+                href={getExplorerUrl(hash)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "shrink-0")}
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
             </div>
           </div>
         </div>
